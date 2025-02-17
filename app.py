@@ -114,7 +114,7 @@ else:
 
     # 📉 Absenteeism Distribution
     fig1, ax1 = plt.subplots(figsize=(8, 4))
-    sns.histplot(df["Absenteeism_Days"], bins=20, kde=True, color="skyblue", ax=ax1)
+    sns.histplot(df["Absenteeism_Days","Past Absences"], bins=20, kde=True, color="skyblue", ax=ax1)
     ax1.set_title("Company Absenteeism Distribution")
     st.pyplot(fig1)
 
