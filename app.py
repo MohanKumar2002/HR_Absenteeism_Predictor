@@ -115,7 +115,7 @@ else:
     # 📉 Absenteeism Distribution
     fig1, ax1 = plt.subplots(figsize=(8, 4))
     if "Absenteeism_Days" in df.columns:
-        sns.histplot(df["Absenteeism_Days","Past Absences"], bins=20, kde=True, color="skyblue", ax=ax1)
+        sns.histplot(df["Absenteeism_Days"], bins=20, kde=True, color="skyblue", ax=ax1)
     else:
         st.warning("⚠️ The column 'Absenteeism_Days' is missing in your dataset. Please upload a valid file.")
     ax1.set_title("Company Absenteeism Distribution")
