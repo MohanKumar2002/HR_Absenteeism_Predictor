@@ -6,3 +6,4 @@ matplotlib
 seaborn
 firebase-admin  # For Firebase Auth & Database
 google-auth  # For Google Drive API (Future use)
+plotly
