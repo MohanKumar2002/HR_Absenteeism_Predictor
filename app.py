@@ -76,7 +76,7 @@ else:
         st.metric("Highest Absenteeism Department", dept_absenteeism)
 
     # 🏢 KPI for Absenteeism Risk Score
-    avg_risk_score = df["Absenteeism_Risk_Score"].mean()
+    avg_risk_score = df["Absenteeism Risk Score"].mean()
     st.subheader("📊 KPI: Average Absenteeism Risk Score")
     st.write(f"Avg. Absenteeism Risk Score for all employees: {avg_risk_score:.2f}%")
 
