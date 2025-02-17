@@ -64,7 +64,7 @@ else:
         st.metric("Total Employees", total_employees)
 
     with col2:
-        high_risk_employees = len(df[df["Absenteeism_Risk_Score"] > 75])
+        high_risk_employees = len(df[df["Absenteeism Risk Score"] > 75])
         st.metric("High-Risk Employees", high_risk_employees)
 
     with col3:
