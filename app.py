@@ -6,6 +6,7 @@ import datetime
 import seaborn as sns
 import matplotlib.pyplot as plt
 import plotly.express as px
+import plotly.graph_objects as go
 
 # 🎯 Load AI Model
 model = joblib.load("absenteeism_model.pkl")
@@ -55,71 +56,64 @@ else:
     st.subheader("📌 Preview of Uploaded Data")
     st.dataframe(df.head(10))
 
-    # 🕵️ Auto-Detect Employee Identifier
-    search_column = None
-    for col in df.columns:
-        if "id" in col.lower() or "name" in col.lower():
-            search_column = col
-            break
+    # 🧑‍💼 Cards and KPI Section
+    col1, col2, col3, col4 = st.columns(4)
 
-    # 🎯 Employee Search & Prediction
-    if search_column:
-        search_value = st.text_input(f"🔍 Search Employee by {search_column}")
+    with col1:
+        total_employees = len(df)
+        st.metric("Total Employees", total_employees)
 
-        if search_value:
-            try:
-                if df[search_column].dtype != object:
-                    search_value = int(search_value)
+    with col2:
+        high_risk_employees = len(df[df["Absenteeism_Risk_Score"] > 75])
+        st.metric("High-Risk Employees", high_risk_employees)
 
-                employee_data = df[df[search_column] == search_value]
+    with col3:
+        avg_absenteeism_days = df["Absenteeism_Days"].mean()
+        st.metric("Avg. Absenteeism Days", round(avg_absenteeism_days, 2))
 
-                if not employee_data.empty:
-                    # 📌 Show Employee Details
-                    st.write("✅ Employee Found:")
-                    st.dataframe(employee_data)
+    with col4:
+        dept_absenteeism = df.groupby("Department")["Absenteeism_Days"].sum().idxmax()
+        st.metric("Highest Absenteeism Department", dept_absenteeism)
 
-                    # 🔥 Predict for Selected Employee
-                    feature_cols = [col for col in df.columns if col.lower() not in ["employee_id", "name", "absenteeism_risk"]]
-                    employee_features = employee_data[feature_cols]
+    # 🏢 KPI for Absenteeism Risk Score
+    avg_risk_score = df["Absenteeism_Risk_Score"].mean()
+    st.subheader("📊 KPI: Average Absenteeism Risk Score")
+    st.write(f"Avg. Absenteeism Risk Score for all employees: {avg_risk_score:.2f}%")
 
-                    if st.button("📊 Predict Absenteeism"):
-                        prediction = model.predict(employee_features)[0]
-                        risk_prob = model.predict_proba(employee_features)[0][1] * 100
+    # 🔄 Gauge Chart for Absenteeism Risk
+    fig_gauge = go.Figure(go.Indicator(
+        mode="gauge+number",
+        value=avg_risk_score,
+        title={"text": "Absenteeism Risk (%)"},
+        gauge={
+            "axis": {"range": [0, 100]},
+            "bar": {"color": "red"},
+            "steps": [
+                {"range": [0, 50], "color": "lightgreen"},
+                {"range": [50, 75], "color": "yellow"},
+                {"range": [75, 100], "color": "red"}
+            ]
+        }
+    ))
+    st.plotly_chart(fig_gauge)
 
-                        if prediction == 1:
-                            st.error(f"⚠️ High Absenteeism Risk! ({risk_prob:.2f}% probability)")
-                        else:
-                            st.success(f"✅ Low Absenteeism Risk! ({risk_prob:.2f}% probability)")
-
-                        # 🌟 Update Session with Selected Employee
-                        st.session_state.selected_employee = employee_data
-
-                        # 📊 Show Employee Details in Charts
-                        st.subheader("📊 Employee Insights")
-                        fig = px.bar(
-                            employee_data.melt(id_vars=[search_column], value_vars=feature_cols),
-                            x="variable", y="value",
-                            title="Employee Features Overview",
-                            color="variable"
-                        )
-                        st.plotly_chart(fig)
-
-                else:
-                    st.warning("❌ Employee Not Found. Please check the ID or Name.")
-            except ValueError:
-                st.warning("⚠️ Please enter a valid Employee ID or Name.")
-
-    # 📈 **Absenteeism Trends**
+    # 📈 Absenteeism Distribution
     st.subheader("📊 Absenteeism Trends")
-
-    # 📉 Absenteeism Distribution
     fig1, ax1 = plt.subplots(figsize=(8, 4))
-    if "Absenteeism_Days" in df.columns:
-        sns.histplot(df["Absenteeism_Days"], bins=20, kde=True, color="skyblue", ax=ax1)
-    else:
-        st.warning("⚠️ The column 'Absenteeism_Days' is missing in your dataset. Please upload a valid file.")
+    sns.histplot(df["Absenteeism_Days"], bins=20, kde=True, color="skyblue", ax=ax1)
     ax1.set_title("Company Absenteeism Distribution")
     st.pyplot(fig1)
+
+    # 📊 Absenteeism by Department
+    st.subheader("📊 Absenteeism by Department")
+    dept_data = df.groupby("Department")["Absenteeism_Days"].sum().reset_index()
+    fig2 = px.bar(dept_data, x="Department", y="Absenteeism_Days", title="Absenteeism by Department")
+    st.plotly_chart(fig2)
+
+    # 📊 Performance vs Absenteeism Correlation
+    st.subheader("📊 Performance vs Absenteeism Correlation")
+    fig3 = px.scatter(df, x="Performance_Rating", y="Absenteeism_Days", color="Department", title="Performance vs Absenteeism")
+    st.plotly_chart(fig3)
 
     # 🏢 Bulk Prediction Option
     if st.checkbox("📂 Predict for All Employees"):
